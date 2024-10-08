@@ -10,7 +10,7 @@ resource "aws_dynamodb_table" "dynamodb" {
 
   tags = {
     Environment = "staging"
-    Project     = "HN Ruby Digest"
+    Project     = "HN Ruby"
     ManagedBy   = "Terraform"
   }
 
