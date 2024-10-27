@@ -10,3 +10,12 @@ resource "aws_cloudwatch_event_target" "lambda_scheduled_task" {
   target_id = "run-scheduled-task-every-day-7am"
   arn       = aws_lambda_function.hn_ruby.arn
 }
+
+# Lambda 実行権限を許可
+resource "aws_lambda_permission" "allow_eventbridge" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.hn_ruby.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.daily_7am.arn
+}
