@@ -1,4 +1,4 @@
-resource "aws_dynamodb_table" "dynamodb" {
+resource "aws_dynamodb_table" "users" {
   name         = "Users-staging"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "UserId"
@@ -32,13 +32,14 @@ resource "aws_dynamodb_table" "dynamodb" {
 }
 
 # resource "aws_dynamodb_table_item" を使うとテスト用のseedデータが投入できる
-# resource "aws_dynamodb_table_item" "dynamodb_item" {
-#   table_name = aws_dynamodb_table.dynamodb.name
-#   hash_key   = aws_dynamodb_table.dynamodb.hash_key
+resource "aws_dynamodb_table_item" "seed_email_items" {
+  count = length(var.seed_emails)
 
-#   item = <<-EOT
-#     {
-#       "Email": { "S": "example@example.com" }
-#     }
-#   EOT
-# }
+  table_name = aws_dynamodb_table.users.name
+  hash_key   = aws_dynamodb_table.users.hash_key
+
+  item = jsonencode({
+    UserId = { "S" = uuid() }
+    Email  = { "S" = var.seed_emails[count.index] }
+  })
+}
