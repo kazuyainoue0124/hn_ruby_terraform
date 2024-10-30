@@ -1,11 +1,22 @@
 resource "aws_dynamodb_table" "dynamodb" {
-  name         = "Emails-staging"
+  name         = "Users-staging"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "Email"
+  hash_key     = "UserId"
+
+  attribute {
+    name = "UserId"
+    type = "S"
+  }
 
   attribute {
     name = "Email"
     type = "S"
+  }
+
+  global_secondary_index {
+    name            = "EmailIndex"
+    hash_key        = "Email"
+    projection_type = "ALL"
   }
 
   tags = {
