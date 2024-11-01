@@ -34,7 +34,8 @@ resource "aws_lambda_function" "hn_ruby" {
 
   environment {
     variables = {
-      ENV = "staging"
+      ENV              = "staging"
+      SES_SOURCE_EMAIL = "noreply@staging.ruby-hn-digest.com"
     }
   }
 
@@ -105,4 +106,31 @@ resource "aws_iam_policy" "dynamodb_access_policy" {
 resource "aws_iam_role_policy_attachment" "dynamodb_access_attachment" {
   role       = aws_iam_role.iam_for_lambda.name
   policy_arn = aws_iam_policy.dynamodb_access_policy.arn
+}
+
+# SESへのアクセスを許可するポリシードキュメント
+data "aws_iam_policy_document" "ses_send_email" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ses:SendEmail",
+      "ses:SendRawEmail"
+    ]
+
+    resources = ["*"]
+  }
+}
+
+# SESアクセス用のIAMポリシー
+resource "aws_iam_policy" "ses_send_email_policy" {
+  name        = "ses_send_email_policy_staging"
+  description = "IAM policy to allow SES SendEmail and SendRawEmail"
+  policy      = data.aws_iam_policy_document.ses_send_email.json
+}
+
+# SESアクセス用のポリシーをIAMロールにアタッチ
+resource "aws_iam_role_policy_attachment" "ses_send_email_attachment" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.ses_send_email_policy.arn
 }
