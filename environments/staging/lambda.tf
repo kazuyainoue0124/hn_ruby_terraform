@@ -42,6 +42,8 @@ resource "aws_lambda_function" "hn_ruby" {
     aws_iam_role_policy_attachment.lambda_logs,
     aws_cloudwatch_log_group.hn_ruby,
   ]
+
+  timeout = 15
 }
 
 resource "aws_cloudwatch_log_group" "hn_ruby" {
@@ -73,4 +75,34 @@ resource "aws_iam_policy" "lambda_logging" {
 resource "aws_iam_role_policy_attachment" "lambda_logs" {
   role       = aws_iam_role.iam_for_lambda.name
   policy_arn = aws_iam_policy.lambda_logging.arn
+}
+
+# DynamoDBへのアクセスを許可するポリシードキュメント
+data "aws_iam_policy_document" "dynamodb_access" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "dynamodb:Scan",
+    ]
+
+    resources = [
+      aws_dynamodb_table.users.arn,
+      "${aws_dynamodb_table.users.arn}/index/EmailIndex"
+    ]
+  }
+}
+
+# DynamoDBアクセス用のIAMポリシー
+resource "aws_iam_policy" "dynamodb_access_policy" {
+  name        = "dynamodb_access_policy_staging"
+  path        = "/"
+  description = "IAM policy to allow DynamoDB Scan on Users-staging table"
+  policy      = data.aws_iam_policy_document.dynamodb_access.json
+}
+
+# DynamoDBアクセス用のポリシーをIAMロールにアタッチ
+resource "aws_iam_role_policy_attachment" "dynamodb_access_attachment" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.dynamodb_access_policy.arn
 }
